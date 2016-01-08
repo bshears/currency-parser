@@ -5,18 +5,25 @@ require 'nokogiri'
 require 'restclient'
 
 class CurrencyParser
-@@page   
    def initialize(currency)
-      @@page=Nokogiri::HTML(RestClient.get("http://kantor.aliorbank.pl/forex"))
+      @page=Nokogiri::HTML(RestClient.get("http://kantor.aliorbank.pl/forex"))
       @currency=currency
+      @sell_list=@page.css('td.ere-sale')
+      @buy_list=@page.css('td.ere-purchase')
    end
 
    def display_sell()
-      puts '1 ' + @currency + ' =  ' + @@page.css('td.ere-sale').css('span.__currency-rate').css('span[data-currency=' + @currency +']').text + ' PLN'
+      puts "SELL\t1 " + @currency + " = " + get_price(@sell_list) + " PLN"
    end
+
+   def get_price(list)
+      return list.css('span.__currency-rate').css('span[data-currency=' + @currency + ']').text
+   end
+
    def display_buy()
-      puts '1 ' + @currency + ' =  ' + @@page.css('td.ere-purchase').css('span.__currency-rate').css('span[data-currency=' + @currency +']').text + ' PLN'
+      puts "BUY\t1 " + @currency + " = " + get_price(@buy_list) + " PLN"
    end
+   
 end
 
 if ARGV.empty?
@@ -24,6 +31,11 @@ if ARGV.empty?
    exit
 else 
    CURRENCY = ARGV[0]
+end
+
+if ARGV[0].length != 3
+   puts "Currency code should contain only 3 characters ie. \"GBP\""
+   exit
 end
 
 parser=CurrencyParser.new(CURRENCY)
